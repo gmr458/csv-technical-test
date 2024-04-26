@@ -8,8 +8,6 @@ const app = new Elysia()
 	.post(
 		"/api/files",
 		async (c) => {
-			console.log(c.body);
-
 			if (!c.body.file) {
 				return c.error(400, { message: "A file should be provided" });
 			}
@@ -37,17 +35,17 @@ const app = new Elysia()
 	.get(
 		"/api/users",
 		async (c) => {
+			const coincidences: Record<string, string>[] = [];
+
 			if (!c.query.q) {
 				return {
-					data: globalData,
+					data: coincidences,
 				};
 			}
 
 			const q = c.query.q.toLowerCase();
 			const keys = globalData[0];
 			const rows = globalData.slice(1);
-
-			const coincidences: Record<string, string>[] = [];
 
 			for (const row of rows) {
 				for (const cell of row) {
