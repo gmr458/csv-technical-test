@@ -1,7 +1,7 @@
 import { Elysia, t } from "elysia";
 import { swagger } from "@elysiajs/swagger";
 
-let globalData: string[][] = [[]];
+let globalData: Record<string, string>[];
 
 const app = new Elysia()
 	.use(swagger())
@@ -17,11 +17,24 @@ const app = new Elysia()
 			}
 
 			const text = await c.body.file.text();
-			const data = text
-				.split("\n")
-				.filter((line) => line.length !== 0)
-				.map((line) => line.split(",").map((word) => word.trim()));
-			globalData = data;
+			if (text.length === 0) {
+				return c.error(400, { message: "File must not be empty" });
+			}
+
+			const data = text.trim().split("\n");
+			if (data.length < 2) {
+				return c.error(400, { message: "File must not be empty" });
+			}
+
+			const [keys, ...rows] = data.map((line) => line.split(","));
+
+			globalData = rows.map((cell) => {
+				const item: Record<string, string> = {};
+				keys.forEach((key, index) => {
+					item[key] = cell[index];
+				});
+				return item;
+			});
 
 			return { message: "File uploaded successfully" };
 		},
@@ -35,36 +48,27 @@ const app = new Elysia()
 	.get(
 		"/api/users",
 		async (c) => {
-			const coincidences: Record<string, string>[] = [];
+			if (!globalData) {
+				return {
+					message: "There is not data, send a file to /api/files",
+				};
+			}
 
 			if (!c.query.q) {
 				return {
-					data: coincidences,
+					data: globalData,
 				};
 			}
 
 			const q = c.query.q.toLowerCase();
-			const keys = globalData[0];
-			const rows = globalData.slice(1);
+			const coincidences: Record<string, string>[] = [];
 
-			for (const row of rows) {
-				for (const cell of row) {
-					if (cell.toLowerCase().indexOf(q) !== -1) {
-						const item: Record<string, string> = {};
-
-						for (let index = 0; index < keys.length; index++) {
-							const value = row[index];
-							const key = keys[index];
-							item[key] = value;
-						}
-
-						coincidences.push(item);
+			for (const record of globalData) {
+				for (const key in record) {
+					if (record[key].toLowerCase().indexOf(q) !== -1) {
+						coincidences.push(record);
 					}
 				}
-			}
-
-			if (coincidences.length === 0) {
-				return c.error(404, { message: "Not found" });
 			}
 
 			return { data: coincidences };
