@@ -1,5 +1,5 @@
 {
-  "name": "csv-technical-test-elysia",
+  "name": "csv-technical-test-bun-elysia",
   "scripts": {
     "dev": "bun run --watch src/index.ts",
     "start": "bun run src/index.ts"
