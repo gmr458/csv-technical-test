@@ -9,21 +9,21 @@ const app = new Elysia()
 		"/api/files",
 		async (c) => {
 			if (!c.body.file) {
-				return c.error(400, { message: "A file should be provided" });
+				return c.error(400, { message: "A file must be provided" });
 			}
 
 			if (c.body.file.type !== "text/csv") {
-				return c.error(400, { message: "File type should be CSV" });
+				return c.error(400, { message: "The file type must be CSV" });
 			}
 
 			const text = await c.body.file.text();
 			if (text.length === 0) {
-				return c.error(400, { message: "File must not be empty" });
+				return c.error(400, { message: "The file must not be empty" });
 			}
 
 			const data = text.trim().split("\n");
 			if (data.length < 2) {
-				return c.error(400, { message: "File must not be empty" });
+				return c.error(400, { message: "Send a file with records" });
 			}
 
 			const [keys, ...rows] = data.map((line) => line.split(","));
@@ -50,7 +50,7 @@ const app = new Elysia()
 		async (c) => {
 			if (!globalData) {
 				return {
-					message: "There is not data, send a file to /api/files",
+					message: "There is not data, upload a CSV file first",
 				};
 			}
 
