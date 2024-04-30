@@ -28,6 +28,10 @@ const app = new Elysia()
 
 			const [keys, ...rows] = data.map((line) => line.split(","));
 
+			if (globalData && globalData.length > 0) {
+				globalData = [];
+			}
+
 			globalData = rows.map((cell) => {
 				const item: Record<string, string> = {};
 				keys.forEach((key, index) => {
