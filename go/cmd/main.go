@@ -50,30 +50,32 @@ func handlerFiles(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	for {
-		record, err := reader.Read()
-		if err == io.EOF {
-			break
-		} else if err != nil {
-			log.Println(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
 
-		item := make(map[string]string)
-
-		for index, key := range keys {
-			item[key] = record[index]
-		}
-
-		globalData = append(globalData, item)
+	rows, err := reader.ReadAll()
+	if err != nil {
+		log.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
-
-	if len(globalData) == 0 {
+	if len(rows) == 0 {
 		sendJSON(w, http.StatusBadRequest, envelope{
 			"message": "Send a file with records",
 		}, nil)
 		return
+	}
+
+	if len(globalData) > 0 {
+		globalData = nil
+	}
+
+	for _, cell := range rows {
+		item := make(map[string]string)
+
+		for index, key := range keys {
+			item[key] = cell[index]
+		}
+
+		globalData = append(globalData, item)
 	}
 
 	sendJSON(w, http.StatusOK, envelope{
